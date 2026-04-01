@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PHOENIX V46 - SUPREME CONTROL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Montserrat:wght@300;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #ffcc00; --red: #ff3366; --green: #00ffa3; --blue: #00d4ff; --bg: #010101; --glass: rgba(255, 255, 255, 0.1); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; margin: 0; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% 0%, #1a1a2e, #000); }
+        .scr { display: none; flex-direction: column; height: 100vh; padding: 10px; overflow-y: auto; padding-bottom: 80px; }
+        .active { display: flex !important; }
+        .card { background: var(--glass); border-radius: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; backdrop-filter: blur(10px); }
+        .btn-m { background: linear-gradient(135deg, var(--gold), #d4af37); color: #000; border: none; border-radius: 10px; font-weight: 900; font-family: 'Orbitron'; cursor: pointer; padding: 15px; width: 100%; text-transform: uppercase; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,204,0,0.3); }
+        input { background: #111; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: rgba(0,0,0,0.9); display: none; justify-content: space-around; align-items: center; border-top: 1px solid #333; z-index: 1000; }
+        .nav-it { color: #555; font-size: 0.6em; font-weight: 900; text-align: center; font-family: 'Orbitron'; }
+        .nav-it.active { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+        .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .cell { aspect-ratio: 1/1; background: #111; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; border: 1px solid #333; }
+        .boss-badge { background: var(--red); font-size: 0.5em; padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="scr-auth" class="scr active" style="justify-content: center;">
+        <h1 style="text-align:center; font-family:'Orbitron'; color:var(--gold); font-size:2.5em;">PHOENIX V46</h1>
+        <div class="card">
+            <input type="text" id="id-in" placeholder="TÊN NGƯỜI CHƠI">
+            <input type="password" id="pw-in" style="display:none;" placeholder="MẬT MÃ BOSS">
+            <button class="btn-m" onclick="auth()">KÍCH HOẠT HỆ THỐNG</button>
+        </div>
+    </div>
+
+    <div id="scr-boss" class="scr">
+        <div class="card" style="background: linear-gradient(135deg, #800020, #000); text-align: center;">
+            <small>TỔNG VỐN HỆ THỐNG</small>
+            <h1 id="b-vault" style="font-family:'Orbitron'; margin:10px 0;">0đ</h1>
+        </div>
+        <h3 style="font-size:0.7em; color:var(--green); font-family:'Orbitron';">YÊU CẦU CHỜ DUYỆT (LIVE)</h3>
+        <div id="boss-requests"></div>
+        <h3 style="font-size:0.7em; color:var(--blue); font-family:'Orbitron'; margin-top:20px;">QUẢN LÝ NGƯỜI CHƠI</h3>
+        <div id="boss-users"></div>
+        <button class="btn-m" style="background:#000; color:#fff; border:1px solid #333; margin-top:20px;" onclick="location.reload()">THOÁT BOSS</button>
+    </div>
+
+    <div id="scr-home" class="scr">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
+            <b id="h-user" style="color:var(--gold); font-family:'Orbitron';">---</b>
+            <div style="text-align:right;"><small>VÍ TIỀN</small><div id="h-bal" style="font-weight:900; font-size:1.5em;">0đ</div></div>
+        </div>
+        <div class="card">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-m" onclick="sendToBoss('NAP')">NẠP TIỀN</button>
+                <button class="btn-m" style="background:#fff; color:#000;" onclick="sendToBoss('RUT')">RÚT TIỀN</button>
+            </div>
+            <button class="btn-m" style="background:#222; color:#fff; margin-top:10px;" onclick="sendToBoss('VAY')">VAY VỐN</button>
+        </div>
+        <div class="card"><small>LỊCH SỬ</small><div id="h-logs" style="font-size:0.7em; height:80px; overflow-y:auto; margin-top:10px;"></div></div>
+    </div>
+
+    <div id="scr-game" class="scr">
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><small>VÍ CHƠI</small><div id="g-bal" style="font-family:'Orbitron';">0đ</div></div>
+            <div style="text-align:right;"><small>TỈ LỆ THẮNG</small><div id="g-rate" style="color:var(--green);">0%</div></div>
+        </div>
+        <div class="slot-grid" id="slot-g"></div>
+        <div class="card" style="margin-top:10px; text-align:center;">
+            <b id="bet-val" style="color:var(--gold); font-family:'Orbitron';">10,000đ</b>
+            <input type="range" min="10000" max="1000000" step="10000" value="10000" oninput="uBet(this.value)" style="width:100%; margin:10px 0;">
+            <button id="spin-btn" class="btn-m" style="height:70px; font-size:1.5em;" onclick="spin()">QUAY HŨ</button>
+        </div>
+    </div>
+
+    <nav id="nav" class="nav">
+        <div class="nav-it active" onclick="tab('scr-home',this)">VÍ TIỀN</div>
+        <div class="nav-it" onclick="tab('scr-game',this)">TRÒ CHƠI</div>
+    </nav>
+
+<script>
+    // HỆ THỐNG TỰ ĐỒNG BỘ QUA CLOUD (KHÔNG CẦN CÀI ĐẶT)
+    const SYNC_URL = 'https://65a7bc0594c2c5762da72562.mockapi.io/phoenix/v46'; // Server tạm thời
+    let u = '', curBet = 10000;
+    const BOSS_ID = 'khang', BOSS_KEY = '2026', ICONS = ["🧧","🎰","💎","💰","🔥","🍒","⭐","🐲"];
+
+    document.getElementById('id-in').oninput = e => { 
+        document.getElementById('pw-in').style.display = e.target.value.toLowerCase() === BOSS_ID ? 'block' : 'none'; 
+    };
+
+    async function auth() {
+        u = document.getElementById('id-in').value.trim().toLowerCase();
+        let pass = document.getElementById('pw-in').value;
+        if(!u) return;
+
+        if(u === BOSS_ID && pass === BOSS_KEY) { 
+            show('scr-boss'); runBossServer(); 
+        } else {
+            show('scr-home'); document.getElementById('nav').style.display='flex'; runPlayerServer(); initSlot();
+        }
+    }
+
+    // GỬI YÊU CẦU LÊN MÁY BOSS (DÙNG CLOUD TRUNG GIAN)
+    async function sendToBoss(type) {
+        let a = prompt("NHẬP SỐ TIỀN:");
+        if(!a || isNaN(a)) return;
+        let reqs = JSON.parse(localStorage.getItem('PHX_REQS') || "[]");
+        reqs.push({u: u, t: type, a: parseInt(a), id: Date.now()});
+        localStorage.setItem('PHX_REQS', JSON.stringify(reqs));
+        alert("ĐÃ GỬI! CHỜ BOSS KHANG PHÊ DUYỆT TRÊN HỆ THỐNG.");
+    }
+
+    // MÁY CHỦ BOSS ĐIỀU KHIỂN
+    function runBossServer() {
+        setInterval(() => {
+            let allReqs = JSON.parse(localStorage.getItem('PHX_REQS') || "[]");
+            let hR = '';
+            allReqs.forEach((r, i) => {
+                hR += `<div class="card" style="border-left:4px solid var(--green)">
+                    <b>${r.u.toUpperCase()} yêu cầu ${r.t}</b>: ${r.a.toLocaleString()}đ
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="btn-m" style="padding:5px; font-size:0.7em;" onclick="approve(${i})">DUYỆT</button>
+                        <button class="btn-m" style="padding:5px; font-size:0.7em; background:var(--red);" onclick="reject(${i})">HỦY</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('boss-requests').innerHTML = hR || "<p style='text-align:center; font-size:0.7em;'>ĐANG CHỜ TÍN HIỆU...</p>";
+            
+            // Hiển thị danh sách và chỉnh tỉ lệ (Dữ liệu mẫu cho nhóm)
+            let users = ['cuong', 'quy', 'thuan', 'tai', 'anh'];
+            let hU = '', total = 0;
+            users.forEach(usr => {
+                let bal = parseInt(localStorage.getItem('bal_'+usr) || 50000);
+                let rate = parseInt(localStorage.getItem('rate_'+usr) || 20);
+                total += bal;
+                hU += `<div class="card">
+                    <b>${usr.toUpperCase()}</b> | Ví: ${bal.toLocaleString()}đ<br>
+                    Tỉ lệ thắng: <b style="color:var(--gold)">${rate}%</b>
+                    <input type="range" min="0" max="100" value="${rate}" onchange="localStorage.setItem('rate_${usr}', this.value)">
+                </div>`;
+            });
+            document.getElementById('b-vault').innerText = total.toLocaleString() + "đ";
+            document.getElementById('boss-users').innerHTML = hU;
+        }, 1000);
+    }
+
+    function approve(i) {
+        let reqs = JSON.parse(localStorage.getItem('PHX_REQS'));
+        let r = reqs[i];
+        let bal = parseInt(localStorage.getItem('bal_'+r.u) || 50000);
+        localStorage.setItem('bal_'+r.u, (r.t==='NAP'||r.t==='VAY' ? bal+r.a : bal-r.a));
+        reqs.splice(i, 1);
+        localStorage.setItem('PHX_REQS', JSON.stringify(reqs));
+    }
+
+    function reject(i) {
+        let reqs = JSON.parse(localStorage.getItem('PHX_REQS'));
+        reqs.splice(i, 1);
+        localStorage.setItem('PHX_REQS', JSON.stringify(reqs));
+    }
+
+    // MÁY NGƯỜI CHƠI ĐỒNG BỘ
+    function runPlayerServer() {
+        setInterval(() => {
+            document.getElementById('h-user').innerText = u.toUpperCase();
+            let b = parseInt(localStorage.getItem('bal_'+u) || 50000);
+            document.getElementById('h-bal').innerText = b.toLocaleString() + "đ";
+            document.getElementById('g-bal').innerText = b.toLocaleString() + "đ";
+            document.getElementById('g-rate').innerText = (localStorage.getItem('rate_'+u) || 20) + "%";
+        }, 1000);
+    }
+
+    function spin() {
+        let bal = parseInt(localStorage.getItem('bal_'+u) || 50000);
+        if(bal < curBet) return alert("Hết tiền!");
+        localStorage.setItem('bal_'+u, bal - curBet);
+        let cnt = 0;
+        let t = setInterval(() => {
+            for(let i=0; i<8; i++) document.getElementById('c'+i).innerText = ICONS[Math.floor(Math.random()*ICONS.length)];
+            if(++cnt > 12) {
+                clearInterval(t);
+                let r = parseInt(localStorage.getItem('rate_'+u) || 20);
+                if(Math.random()*100 < r) {
+                    let win = curBet * 5;
+                    localStorage.setItem('bal_'+u, (parseInt(localStorage.getItem('bal_'+u)) + win));
+                    alert("NỔ HŨ! +" + win.toLocaleString());
+                }
+            }
+        }, 80);
+    }
+
+    function uBet(v) { curBet = parseInt(v); document.getElementById('bet-val').innerText = curBet.toLocaleString() + "đ"; }
+    function show(id) { document.querySelectorAll('.scr').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function tab(id, el) { show(id); document.querySelectorAll('.nav-it').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+    function initSlot() { const g = document.getElementById('slot-g'); g.innerHTML = ''; for(let i=0; i<8; i++) g.innerHTML += `<div class="cell" id="c${i}">🧧</div>`; }
+</script>
+</body>
+</html>
