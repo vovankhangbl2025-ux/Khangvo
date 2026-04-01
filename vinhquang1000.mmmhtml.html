@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PHOENIX V46 - SUPREME CONTROL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Montserrat:wght@300;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #ffcc00; --red: #ff3366; --green: #00ffa3; --blue: #00d4ff; --bg: #010101; --glass: rgba(255, 255, 255, 0.08); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; margin: 0; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% 0%, #1a1a2e, #000); }
+        .scr { display: none; flex-direction: column; height: 100vh; padding: 10px; overflow-y: auto; padding-bottom: 80px; }
+        .active { display: flex !important; }
+        .card { background: var(--glass); border-radius: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; backdrop-filter: blur(10px); }
+        .btn-m { background: linear-gradient(135deg, var(--gold), #d4af37); color: #000; border: none; border-radius: 10px; font-weight: 900; font-family: 'Orbitron'; cursor: pointer; padding: 15px; width: 100%; text-transform: uppercase; transition: 0.2s; box-shadow: 0 4px 15px rgba(255,204,0,0.3); }
+        .btn-m:active { transform: scale(0.95); }
+        input, select { background: #111; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: rgba(0,0,0,0.9); display: none; justify-content: space-around; align-items: center; border-top: 1px solid #333; z-index: 1000; }
+        .nav-it { color: #555; font-size: 0.65em; font-weight: 900; text-align: center; font-family: 'Orbitron'; }
+        .nav-it.active { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+        .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #000; padding: 10px; border-radius: 15px; border: 2px solid #222; }
+        .cell { aspect-ratio: 1/1; background: #111; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; border: 1px solid #333; }
+        .history-box { font-size: 0.7em; max-height: 100px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 5px; margin-top: 5px; }
+        .badge { font-size: 0.6em; padding: 2px 5px; border-radius: 3px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="scr-auth" class="scr active" style="justify-content: center; align-items: center;">
+        <h1 style="font-family:'Orbitron'; color:var(--gold); margin:0; font-size:2.5em; text-shadow: 0 0 20px var(--gold);">PHOENIX</h1>
+        <p style="letter-spacing:5px; color:#666; font-size:0.6em; margin-bottom:30px;">V46 SUPREME CONTROL</p>
+        <div class="card" style="width:100%; max-width:320px;">
+            <input type="text" id="id-in" placeholder="ID NGƯỜI CHƠI">
+            <input type="password" id="pw-in" style="display:none;" placeholder="MÃ MASTER">
+            <button class="btn-m" onclick="auth()">XÁC NHẬN</button>
+        </div>
+    </div>
+
+    <div id="scr-boss" class="scr">
+        <div class="card" style="background: linear-gradient(135deg, #1a1a2e, #000); border-color: var(--gold); text-align: center;">
+            <small style="color:var(--gold); font-family:'Orbitron';">TỔNG VỐN HỆ THỐNG</small>
+            <h1 id="b-vault" style="font-family:'Orbitron'; margin:10px 0; color:#fff;">0đ</h1>
+        </div>
+        
+        <h3 style="font-size:0.7em; color:var(--red); font-family:'Orbitron';">YÊU CẦU GIAO DỊCH CHỜ DUYỆT</h3>
+        <div id="boss-tx-list"></div>
+
+        <h3 style="font-size:0.7em; color:var(--blue); font-family:'Orbitron'; margin-top:20px;">QUẢN LÝ TỈ LỆ & SỐ DƯ NGƯỜI CHƠI</h3>
+        <div id="boss-user-hub"></div>
+        
+        <button class="btn-m" style="background:#000; color:#fff; border:1px solid #333; margin-top:20px;" onclick="location.reload()">THOÁT CHẾ ĐỘ BOSS</button>
+    </div>
+
+    <div id="scr-home" class="scr">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; padding:15px 5px;">
+            <div><small style="color:#666;">PLAYER</small><h2 id="h-user" style="margin:0; color:var(--gold);">---</h2></div>
+            <div style="text-align:right;"><small style="color:var(--green)">VÍ TIỀN</small><div id="h-bal" style="font-weight:900; font-size:1.5em; font-family:'Orbitron';">0đ</div></div>
+        </div>
+        <div class="card">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn-m" onclick="sendReq('NAP')">NẠP TIỀN</button>
+                <button class="btn-m" style="background:#fff; color:#000;" onclick="sendReq('RUT')">RÚT TIỀN</button>
+            </div>
+            <button class="btn-m" style="background:#222; color:#fff; margin-top:10px; border:1px solid #444;" onclick="sendReq('VAY')">VAY VỐN</button>
+        </div>
+        <div class="card">
+            <small style="color:var(--gold); font-family:'Orbitron'; font-size:0.6em;">LỊCH SỬ GIAO DỊCH</small>
+            <div id="h-logs" class="history-box"></div>
+        </div>
+    </div>
+
+    <div id="scr-game" class="scr">
+        <div class="card" style="display:flex; justify-content:space-between; padding:10px;">
+            <div><small style="color:var(--green)">SỐ DƯ</small><div id="g-bal" style="font-family:'Orbitron';">0đ</div></div>
+            <div style="text-align:right;"><small style="color:var(--red)">JACKPOT</small><div style="color:var(--red); font-family:'Orbitron';">999.999.999</div></div>
+        </div>
+        <div class="slot-grid" id="slot-g"></div>
+        <div class="card" style="margin-top:10px; text-align:center;">
+            <b id="bet-val" style="color:var(--gold); font-family:'Orbitron';">10,000đ</b>
+            <input type="range" min="10000" max="1000000" step="10000" value="10000" style="width:100%; margin:10px 0;" oninput="uBet(this.value)">
+            <button id="spin-btn" class="btn-m" style="height:70px; font-size:1.5em;" onclick="spin()">QUAY HŨ</button>
+        </div>
+    </div>
+
+    <nav id="nav" class="nav">
+        <div class="nav-it active" onclick="tab('scr-home',this)">VÍ TIỀN</div>
+        <div class="nav-it" onclick="tab('scr-game',this)">TRÒ CHƠI</div>
+    </nav>
+
+<script>
+    let u = '', curBet = 10000;
+    const BOSS_ID = 'khang', BOSS_KEY = '2026', ICONS = ["🧧","🎰","💎","💰","🔥","🍒","⭐","🐲"];
+
+    document.getElementById('id-in').oninput = e => { 
+        document.getElementById('pw-in').style.display = e.target.value.toLowerCase() === BOSS_ID ? 'block' : 'none'; 
+    };
+
+    function auth() {
+        u = document.getElementById('id-in').value.trim();
+        let pass = document.getElementById('pw-in').value;
+        if(!u) return;
+        if(u.toLowerCase() === BOSS_ID && pass === BOSS_KEY) { show('scr-boss'); runBossHub(); }
+        else {
+            let plist = JSON.parse(localStorage.getItem('PHX_USERS') || "[]");
+            if(!plist.includes(u)) {
+                plist.push(u); localStorage.setItem('PHX_USERS', JSON.stringify(plist));
+                localStorage.setItem('bal_'+u, 50000); localStorage.setItem('rate_'+u, 20); localStorage.setItem('logs_'+u, JSON.stringify([]));
+            }
+            show('scr-home'); document.getElementById('nav').style.display='flex'; runPlayerHub(); initSlot();
+        }
+    }
+
+    // NGƯỜI CHƠI GỬI YÊU CẦU
+    function sendReq(type) {
+        let amt = prompt("NHẬP SỐ TIỀN:");
+        if(!amt || isNaN(amt)) return;
+        let txs = JSON.parse(localStorage.getItem('PHX_PENDING') || "[]");
+        txs.push({id: Date.now(), u: u, t: type, a: parseInt(amt)});
+        localStorage.setItem('PHX_PENDING', JSON.stringify(txs));
+        alert("ĐÃ GỬI YÊU CẦU ĐẾN BOSS KHANG!");
+    }
+
+    // BOSS: ĐIỀU KHIỂN TOÀN CỤC
+    function runBossHub() {
+        setInterval(() => {
+            let txs = JSON.parse(localStorage.getItem('PHX_PENDING') || "[]");
+            let users = JSON.parse(localStorage.getItem('PHX_USERS') || "[]");
+            let hT = '', hU = '', total = 0;
+
+            // Hiển thị yêu cầu chờ duyệt
+            txs.forEach((t, i) => {
+                hT += `<div class="card" style="border-left:4px solid var(--green)">
+                    <b>${t.u.toUpperCase()} yêu cầu ${t.t}</b>: ${t.a.toLocaleString()}đ
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="btn-m" style="padding:5px; font-size:0.7em;" onclick="approve(${i})">DUYỆT</button>
+                        <button class="btn-m" style="padding:5px; font-size:0.7em; background:var(--red);" onclick="reject(${i})">HỦY</button>
+                    </div>
+                </div>`;
+            });
+
+            // Hiển thị danh sách người chơi & Điều khiển tỉ lệ
+            users.forEach(p => {
+                let bal = parseInt(localStorage.getItem('bal_'+p) || 0);
+                let rate = parseInt(localStorage.getItem('rate_'+p) || 20);
+                let logs = JSON.parse(localStorage.getItem('logs_'+p) || "[]");
+                total += bal;
+                hU += `<div class="card">
+                    <div style="display:flex; justify-content:space-between">
+                        <b>${p.toUpperCase()}</b>
+                        <span style="color:var(--green)">${bal.toLocaleString()}đ</span>
+                    </div>
+                    <div style="margin:10px 0; font-size:0.7em;">
+                        Tỉ lệ thắng: <b style="color:var(--gold)">${rate}%</b>
+                        <input type="range" min="0" max="100" value="${rate}" onchange="localStorage.setItem('rate_${p}', this.value)" style="width:100px; margin-left:10px;">
+                    </div>
+                    <button class="btn-m" style="padding:5px; font-size:0.6em; background:#333; color:#fff;" onclick="adjustBal('${p}')">CHỈNH TIỀN</button>
+                    <div class="history-box">${logs.slice(-5).map(l => `<div>${l}</div>`).join('')}</div>
+                </div>`;
+            });
+
+            document.getElementById('b-vault').innerText = total.toLocaleString() + "đ";
+            document.getElementById('boss-tx-list').innerHTML = hT || "<p style='text-align:center; font-size:0.7em;'>KHÔNG CÓ YÊU CẦU</p>";
+            document.getElementById('boss-user-hub').innerHTML = hU;
+        }, 1000);
+    }
+
+    function approve(i) {
+        let txs = JSON.parse(localStorage.getItem('PHX_PENDING'));
+        let t = txs[i];
+        let bal = parseInt(localStorage.getItem('bal_'+t.u));
+        if(t.t === 'NAP' || t.t === 'VAY') { localStorage.setItem('bal_'+t.u, bal + t.a); }
+        else { localStorage.setItem('bal_'+t.u, Math.max(0, bal - t.a)); }
+        
+        addLog(t.u, `Đã duyệt ${t.t}: +${t.a.toLocaleString()}đ`);
+        txs.splice(i, 1);
+        localStorage.setItem('PHX_PENDING', JSON.stringify(txs));
+    }
+
+    function reject(i) {
+        let txs = JSON.parse(localStorage.getItem('PHX_PENDING'));
+        txs.splice(i, 1);
+        localStorage.setItem('PHX_PENDING', JSON.stringify(txs));
+    }
+
+    function adjustBal(p) {
+        let newBal = prompt("NHẬP SỐ TIỀN MỚI CHO " + p.toUpperCase());
+        if(newBal !== null) {
+            localStorage.setItem('bal_'+p, parseInt(newBal));
+            addLog(p, `Boss đã điều chỉnh số dư thành ${parseInt(newBal).toLocaleString()}đ`);
+        }
+    }
+
+    function addLog(p, msg) {
+        let logs = JSON.parse(localStorage.getItem('logs_'+p) || "[]");
+        logs.push(new Date().toLocaleTimeString() + ": " + msg);
+        localStorage.setItem('logs_'+p, JSON.stringify(logs.slice(-20)));
+    }
+
+    // NGƯỜI CHƠI HUB
+    function runPlayerHub() {
+        setInterval(() => {
+            document.getElementById('h-user').innerText = u.toUpperCase();
+            let b = parseInt(localStorage.getItem('bal_'+u) || 0);
+            document.getElementById('h-bal').innerText = b.toLocaleString() + "đ";
+            document.getElementById('g-bal').innerText = b.toLocaleString() + "đ";
+            let logs = JSON.parse(localStorage.getItem('logs_'+u) || "[]");
+            document.getElementById('h-logs').innerHTML = logs.reverse().map(l => `<div>${l}</div>`).join('') || "Chưa có giao dịch";
+        }, 800);
+    }
+
+    function spin() {
+        let b = parseInt(localStorage.getItem('bal_'+u) || 0);
+        if(b < curBet) return alert("Hết vốn!");
+        localStorage.setItem('bal_'+u, b - curBet);
+        addLog(u, `Quay: -${curBet.toLocaleString()}đ`);
+        
+        let cnt = 0;
+        let t = setInterval(() => {
+            for(let i=0; i<8; i++) document.getElementById('c'+i).innerText = ICONS[Math.floor(Math.random()*ICONS.length)];
+            if(++cnt > 12) {
+                clearInterval(t);
+                let rate = parseInt(localStorage.getItem('rate_'+u) || 20);
+                if(Math.random()*100 < rate) {
+                    let win = curBet * 5;
+                    localStorage.setItem('bal_'+u, (parseInt(localStorage.getItem('bal_'+u)) + win));
+                    addLog(u, `Nổ hũ: +${win.toLocaleString()}đ`);
+                    alert("THẮNG LỚN! +" + win.toLocaleString() + "đ");
+                }
+            }
+        }, 100);
+    }
+
+    function uBet(v) { curBet = parseInt(v); document.getElementById('bet-val').innerText = curBet.toLocaleString() + "đ"; }
+    function show(id) { document.querySelectorAll('.scr').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function tab(id, el) { show(id); document.querySelectorAll('.nav-it').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+    function initSlot() { const g = document.getElementById('slot-g'); g.innerHTML = ''; for(let i=0; i<8; i++) g.innerHTML += `<div class="cell" id="c${i}">🧧</div>`; }
+</script>
+</body>
+</html>
